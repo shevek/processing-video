@@ -403,7 +403,8 @@ public class Capture extends PImage implements PConstants {
         getSinkMethods();
       }
 
-      ByteBuffer byteBuffer = natBuffer.getByteBuffer();
+//      ByteBuffer byteBuffer = natBuffer.getByteBuffer();
+      ByteBuffer byteBuffer = ByteBuffer.wrap(natBuffer.readData());
 
       try {
         sinkCopyMethod.invoke(bufferSink,
@@ -441,7 +442,9 @@ public class Capture extends PImage implements PConstants {
         // This means that the OpenGL texture hasn't been created so far (the
         // video frame not drawn using image()), but the user wants to use the
         // pixel array, which we can just get from natBuffer.
-        IntBuffer buf = natBuffer.getByteBuffer().asIntBuffer();
+//        IntBuffer buf = natBuffer.getByteBuffer().asIntBuffer();
+        IntBuffer buf = ByteBuffer.wrap(natBuffer.readData()).asIntBuffer();
+        
         buf.rewind();
         buf.get(pixels);
         Video.convertToARGB(pixels, width, height);
@@ -943,7 +946,7 @@ public class Capture extends PImage implements PConstants {
       Element.linkMany(sourceElement, natSink);
 
     } else {
-      Element conv = ElementFactory.make("ffmpegcolorspace", "ColorConverter");
+      Element conv = ElementFactory.make("videoconvert", "ColorConverter");
 
       Element videofilter = ElementFactory.make("capsfilter", "ColorFilter");
       videofilter.setCaps(new Caps("video/x-raw-rgb, width=" + reqWidth +

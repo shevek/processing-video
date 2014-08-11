@@ -54,7 +54,7 @@ public class Movie extends PImage implements PConstants {
   public static String[] supportedProtocols = { "http" };
   public float frameRate;
   public String filename;
-  public PlayBin2 playbin;
+  public PlayBin playbin;
 
   protected boolean playing = false;
   protected boolean paused = false;
@@ -182,6 +182,7 @@ public class Movie extends PImage implements PConstants {
       playbin.getState();
     }
 
+    // Not working in gst 1.x
     long t = playbin.queryPosition(TimeUnit.NANOSECONDS);
 
     boolean res;
@@ -541,7 +542,8 @@ public class Movie extends PImage implements PConstants {
         getSinkMethods();
       }
 
-      ByteBuffer byteBuffer = natBuffer.getByteBuffer();
+//      ByteBuffer byteBuffer = natBuffer.getByteBuffer();
+      ByteBuffer byteBuffer = ByteBuffer.wrap(natBuffer.readData());
 
       try {
         sinkCopyMethod.invoke(bufferSink, new Object[] { natBuffer, byteBuffer, bufWidth, bufHeight });
@@ -591,7 +593,8 @@ public class Movie extends PImage implements PConstants {
         // This means that the OpenGL texture hasn't been created so far (the
         // video frame not drawn using image()), but the user wants to use the
         // pixel array, which we can just get from natBuffer.
-        IntBuffer buf = natBuffer.getByteBuffer().asIntBuffer();
+//        IntBuffer buf = natBuffer.getByteBuffer().asIntBuffer();
+        IntBuffer buf = ByteBuffer.wrap(natBuffer.readData()).asIntBuffer();
         buf.rewind();
         buf.get(pixels);
         Video.convertToARGB(pixels, width, height);        
@@ -647,7 +650,7 @@ public class Movie extends PImage implements PConstants {
         // which is less fun, so this will crap out.
         file = new File(parent.dataPath(filename));
         if (file.exists()) {
-          playbin = new PlayBin2("Movie Player");
+          playbin = new PlayBin("Movie Player");
           playbin.setInputFile(file);
         }
       } catch (Exception e) {
@@ -660,7 +663,7 @@ public class Movie extends PImage implements PConstants {
         try {
           file = new File(filename);
           if (file.exists()) {
-            playbin = new PlayBin2("Movie Player");
+            playbin = new PlayBin("Movie Player");
             playbin.setInputFile(file);
           }
         } catch (Exception e) {
@@ -673,7 +676,7 @@ public class Movie extends PImage implements PConstants {
         for (int i = 0; i < supportedProtocols.length; i++) {
           if (filename.startsWith(supportedProtocols[i] + "://")) {
             try {
-              playbin = new PlayBin2("Movie Player");
+              playbin = new PlayBin("Movie Player");
               playbin.setURI(URI.create(filename));
               break;
             } catch (Exception e) {
@@ -809,13 +812,19 @@ public class Movie extends PImage implements PConstants {
     }
     buffer.rewind();
     try {
-      buffer.get(copyPixels);
+//      buffer.get(copyPixels);
+      buffer.get(copyPixels, 0, buffer.remaining());
     } catch (BufferUnderflowException e) {
-      e.printStackTrace();
-      copyPixels = null;
+//      PGraphics.showWarning("video buffer doesn't enough pixels");
+//      e.printStackTrace();
+//      copyPixels = null;
+      System.err.println("not enough pixels");
+      available = false;
+      bufWidth = 0;
+      bufHeight = 0;      
       return;
     }
-
+    
     if (playing) {
       fireMovieEvent();
     }
@@ -899,7 +908,9 @@ public class Movie extends PImage implements PConstants {
    * @return float
    */
   protected float getSourceFrameRate() {
-    return (float)playbin.getVideoSinkFrameRate();
+    // GStreamer 1.x doesn't like this call...
+    //return (float)playbin.getVideoSinkFrameRate();
+    return 30;
   }
 
 
