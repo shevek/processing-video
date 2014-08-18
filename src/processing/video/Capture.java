@@ -37,6 +37,9 @@ import org.gstreamer.elements.*;
 import org.gstreamer.interfaces.PropertyProbe;
 import org.gstreamer.interfaces.Property;
 
+// Need to look into the new Device discovery/listing API in gstreamer 1.x
+// https://bugzilla.gnome.org/show_bug.cgi?id=678402
+
 /**
    * ( begin auto-generated from Capture.xml )
    *
@@ -335,7 +338,7 @@ public class Capture extends PImage implements PConstants {
     pipeline.play();
 
     if (init) {
-      checkResIsValid();
+//      checkResIsValid();
     }
   }
 
@@ -857,7 +860,7 @@ public class Capture extends PImage implements PConstants {
     this.parent = parent;
 
     Video.init();
-    checkValidDevices(src);
+    //checkValidDevices(src);
 
     // register methods
     parent.registerMethod("dispose", this);
@@ -949,10 +952,11 @@ public class Capture extends PImage implements PConstants {
       Element conv = ElementFactory.make("videoconvert", "ColorConverter");
 
       Element videofilter = ElementFactory.make("capsfilter", "ColorFilter");
-      videofilter.setCaps(new Caps("video/x-raw-rgb, width=" + reqWidth +
+      videofilter.setCaps(new Caps("video/x-raw, format=(string)ARGB, width=" + reqWidth +
                                    ", height=" + reqHeight +
                                    ", bpp=32, depth=24" + fpsStr));
-
+      
+          
       rgbSink = new RGBDataAppSink("rgb",
           new RGBDataAppSink.Listener() {
             public void rgbFrame(int w, int h, IntBuffer buffer) {
@@ -1067,15 +1071,16 @@ public class Capture extends PImage implements PConstants {
 
 
   protected float getSourceFrameRate() {
-    for (Element sink : pipeline.getSinks()) {
-      for (Pad pad : sink.getPads()) {
-        Fraction frameRate = org.gstreamer.Video.getVideoFrameRate(pad);
-        if (frameRate != null) {
-          return (float)frameRate.toDouble();
-        }
-      }
-    }
-    return 0;
+//    for (Element sink : pipeline.getSinks()) {
+//      for (Pad pad : sink.getPads()) {
+//        Fraction frameRate = org.gstreamer.Video.getVideoFrameRate(pad);
+//        if (frameRate != null) {
+//          return (float)frameRate.toDouble();
+//        }
+//      }
+//    }
+//    return 0;
+    return 30;
   }
 
 
