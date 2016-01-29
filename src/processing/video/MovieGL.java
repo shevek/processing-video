@@ -42,6 +42,10 @@ import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.Buffer;
 import org.freedesktop.gstreamer.elements.*;
 import org.freedesktop.gstreamer.gl.GLContext;
+import org.freedesktop.gstreamer.gl.GLMemory;
+import org.freedesktop.gstreamer.lowlevel.GstBufferAPI;
+import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoFrameStruct;
+import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoInfoStruct;
 
 
 /**
@@ -1130,15 +1134,29 @@ public class MovieGL extends PImage implements PConstants {
     @Override
     public void newBuffer(AppSink sink) {
       Sample sample = sink.pullSample();
-      Structure capsStruct = sample.getCaps().getStructure(0);
-      
-      
+      Caps caps =  sample.getCaps();
+      Structure capsStruct = caps.getStructure(0);
+            
 //      int w = capsStruct.getInteger("width");
 //      int h = capsStruct.getInteger("height");
 //      System.err.println(capsStruct.get);
-
+      
+      
       Buffer buffer = sample.getBuffer();
-
+//      System.out.println("buffer: " + buffer.hashCode());
+      VideoInfoStruct info =  org.freedesktop.gstreamer.Video.getVideoInfo(caps);
+//      System.out.println("info: " + info.hashCode());
+      VideoFrameStruct frame = org.freedesktop.gstreamer.Video.mapVideoFrame(info,
+                                buffer, GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL);
+      if (frame != null) {
+        System.out.println("frame: " + frame.hashCode());
+        System.out.println("frame.data: " + frame.data);
+        for (int i = 0; i < frame.data.length; i++) {
+          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
+        }
+        org.freedesktop.gstreamer.Video.unmapVideoFrame(frame);
+      }
+      
       /*
       ByteBuffer bb = buffer.map(false);
       if (bb != null) {
