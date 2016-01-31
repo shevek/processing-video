@@ -44,6 +44,7 @@ import org.freedesktop.gstreamer.elements.*;
 import org.freedesktop.gstreamer.gl.GLContext;
 import org.freedesktop.gstreamer.gl.GLMemory;
 import org.freedesktop.gstreamer.lowlevel.GstBufferAPI;
+import org.freedesktop.gstreamer.lowlevel.GstMessageAPI;
 import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoFrameStruct;
 import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoInfoStruct;
 
@@ -895,6 +896,21 @@ public class MovieGL extends PImage implements PConstants {
             }
         }
     });
+    
+    
+    bus.connect(new Bus.NEED_CONTEXT() {
+
+      @Override
+      public void needContext(GstObject source, Message msg) {
+        // TODO Auto-generated method stub
+        System.err.println("NEED CONTEXT " + msg.getType().getName());
+        String context_type = "";
+        GstMessageAPI.GSTMESSAGE_API.gst_message_parse_context_type (msg, context_type);
+        System.err.println("  " + context_type);
+      }
+      
+      
+    });
   }
 
   
@@ -1137,19 +1153,28 @@ public class MovieGL extends PImage implements PConstants {
       Caps caps =  sample.getCaps();
       Structure capsStruct = caps.getStructure(0);
             
-//      int w = capsStruct.getInteger("width");
-//      int h = capsStruct.getInteger("height");
-//      System.err.println(capsStruct.get);
+      int w = capsStruct.getInteger("width");
+      int h = capsStruct.getInteger("height");
+//      System.err.println(w + " " + h);
       
       
       Buffer buffer = sample.getBuffer();
 //      System.out.println("buffer: " + buffer.hashCode());
       VideoInfoStruct info =  org.freedesktop.gstreamer.Video.getVideoInfo(caps);
+      if (info != null) {
+        System.out.println("info.width: " + info.width);
+        System.out.println("info.height: " + info.height);
+      }
+      
 //      System.out.println("info: " + info.hashCode());
       VideoFrameStruct frame = org.freedesktop.gstreamer.Video.mapVideoFrame(info,
                                 buffer, GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL);
+//      System.out.println(GstBufferAPI.GST_MAP_READ + " - " + GLMemory.GST_MAP_GL + " - " + (GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL));
+      
       if (frame != null) {
         System.out.println("frame: " + frame.hashCode());
+        System.out.println("frame.id: " + frame.id);
+        System.out.println("frame.flags: " + frame.flags);
         System.out.println("frame.data: " + frame.data);
         for (int i = 0; i < frame.data.length; i++) {
           System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
