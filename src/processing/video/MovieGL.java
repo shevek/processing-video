@@ -29,6 +29,8 @@ import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PJOGL;
 import processing.opengl.PSurfaceJOGL;
 
+import static org.freedesktop.gstreamer.lowlevel.GstVideoAPI.GSTVIDEO_API;
+
 import java.awt.Dimension;
 import java.io.*;
 import java.net.URI;
@@ -47,6 +49,9 @@ import org.freedesktop.gstreamer.lowlevel.GstBufferAPI;
 import org.freedesktop.gstreamer.lowlevel.GstMessageAPI;
 import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoFrameStruct;
 import org.freedesktop.gstreamer.lowlevel.GstVideoAPI.VideoInfoStruct;
+
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.PointerByReference;
 
 
 /**
@@ -904,9 +909,16 @@ public class MovieGL extends PImage implements PConstants {
       public void needContext(GstObject source, Message msg) {
         // TODO Auto-generated method stub
         System.err.println("NEED CONTEXT " + msg.getType().getName());
-        String context_type = "";
-        GstMessageAPI.GSTMESSAGE_API.gst_message_parse_context_type (msg, context_type);
+        // http://www.eshayne.com/jnaex/index.html?example=2
+        // Receive a String from C
+        PointerByReference ptrRef = new PointerByReference();
+        GstMessageAPI.GSTMESSAGE_API.gst_message_parse_context_type (msg, ptrRef);
+        Pointer p = ptrRef.getValue();
+        // extract the null-terminated string from the Pointer
+        String context_type = p.getString(0);
+        
         System.err.println("  " + context_type);
+        
       }
       
       
@@ -1160,27 +1172,25 @@ public class MovieGL extends PImage implements PConstants {
       
       Buffer buffer = sample.getBuffer();
 //      System.out.println("buffer: " + buffer.hashCode());
-      VideoInfoStruct info =  org.freedesktop.gstreamer.Video.getVideoInfo(caps);
-      if (info != null) {
-        System.out.println("info.width: " + info.width);
-        System.out.println("info.height: " + info.height);
-      }
+      VideoInfoStruct.ByReference info =  org.freedesktop.gstreamer.Video.getVideoInfo(caps);
+      GSTVIDEO_API.gst_video_info_free(info);
       
-//      System.out.println("info: " + info.hashCode());
-      VideoFrameStruct frame = org.freedesktop.gstreamer.Video.mapVideoFrame(info,
-                                buffer, GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL);
-//      System.out.println(GstBufferAPI.GST_MAP_READ + " - " + GLMemory.GST_MAP_GL + " - " + (GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL));
+
+      VideoFrameStruct.ByReference frame = org.freedesktop.gstreamer.Video.mapVideoFrame(info,
+                                           buffer, GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL);
       
       if (frame != null) {
         System.out.println("frame: " + frame.hashCode());
         System.out.println("frame.id: " + frame.id);
         System.out.println("frame.flags: " + frame.flags);
         System.out.println("frame.data: " + frame.data);
-        for (int i = 0; i < frame.data.length; i++) {
-          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
-        }
+//        for (int i = 0; i < frame.data.length; i++) {
+//          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
+//        }
         org.freedesktop.gstreamer.Video.unmapVideoFrame(frame);
       }
+      
+      
       
       /*
       ByteBuffer bb = buffer.map(false);
