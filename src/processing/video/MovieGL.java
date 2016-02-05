@@ -1184,9 +1184,9 @@ public class MovieGL extends PImage implements PConstants {
         System.out.println("frame.id: " + frame.id);
         System.out.println("frame.flags: " + frame.flags);
         System.out.println("frame.data: " + frame.data);
-//        for (int i = 0; i < frame.data.length; i++) {
-//          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
-//        }
+        for (int i = 0; i < frame.data.length; i++) {
+          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
+        }
         org.freedesktop.gstreamer.Video.unmapVideoFrame(frame);
       }
       
