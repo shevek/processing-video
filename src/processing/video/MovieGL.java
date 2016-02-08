@@ -25,6 +25,7 @@
 package processing.video;
 
 import processing.core.*;
+import processing.opengl.PGL;
 import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PJOGL;
 import processing.opengl.PSurfaceJOGL;
@@ -952,6 +953,8 @@ public class MovieGL extends PImage implements PConstants {
     if (playing) {
       fireMovieEvent();
     }
+    
+    
   }
 
   protected synchronized void invokeEvent(int w, int h, Buffer buffer) {
@@ -1157,6 +1160,24 @@ public class MovieGL extends PImage implements PConstants {
     }
   }
   
+  public PGraphics dest;
+  int texId;
+  int texW, texH;
+  public boolean texAvailable;
+  public void updateTex() {
+    if (dest == null || dest.width != texW || dest.height != texH) {            
+      dest = parent.createGraphics(texW, texH, PConstants.P2D);
+    }
+    PGraphicsOpenGL destpg = (PGraphicsOpenGL)dest;
+    destpg.beginDraw();
+    destpg.background(0, 0);
+    PGL pgl = destpg.beginPGL();
+    pgl.drawTexture(PGL.TEXTURE_2D, texId, texW, texH, 
+                    0, 0, texW, texH);
+    destpg.endPGL();
+    destpg.endDraw();     
+  }
+  
   private class NewSampleListener implements AppSink.NEW_SAMPLE {
 
     @Override
@@ -1179,7 +1200,10 @@ public class MovieGL extends PImage implements PConstants {
       
       if (frame != null) {
         // texture = *(guint *) v_frame.data[0];
-        System.out.println("texture: " +  frame.data[0].getPointer(0).getInt(0));
+        texId = frame.data[0].getPointer(0).getInt(0);    
+        texW = info.width; 
+        texH = info.height;  
+        System.out.println("texture: " +  texId);
 //        System.out.println("frame: " + frame.hashCode());
 //        System.out.println("frame.id: " + frame.id);
 //        System.out.println("frame.flags: " + frame.flags);
@@ -1187,7 +1211,11 @@ public class MovieGL extends PImage implements PConstants {
 //        for (int i = 0; i < frame.data.length; i++) {
 //          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
 //        }
+        
+        texAvailable = true;
         org.freedesktop.gstreamer.Video.unmapVideoFrame(frame);
+      } else {
+        texAvailable = false;
       }
       GSTVIDEO_API.gst_video_info_free(info);
       
