@@ -1171,25 +1171,25 @@ public class MovieGL extends PImage implements PConstants {
       
       
       Buffer buffer = sample.getBuffer();
-//      System.out.println("buffer: " + buffer.hashCode());
+//      System.out.println("buffer: " + buffer.toString());
       VideoInfoStruct.ByReference info =  org.freedesktop.gstreamer.Video.getVideoInfo(caps);
-      GSTVIDEO_API.gst_video_info_free(info);
-      
 
       VideoFrameStruct.ByReference frame = org.freedesktop.gstreamer.Video.mapVideoFrame(info,
                                            buffer, GstBufferAPI.GST_MAP_READ | GLMemory.GST_MAP_GL);
       
       if (frame != null) {
-        System.out.println("frame: " + frame.hashCode());
-        System.out.println("frame.id: " + frame.id);
-        System.out.println("frame.flags: " + frame.flags);
-        System.out.println("frame.data: " + frame.data);
-        for (int i = 0; i < frame.data.length; i++) {
-          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
-        }
+        // texture = *(guint *) v_frame.data[0];
+        System.out.println("texture: " +  frame.data[0].getPointer(0).getInt(0));
+//        System.out.println("frame: " + frame.hashCode());
+//        System.out.println("frame.id: " + frame.id);
+//        System.out.println("frame.flags: " + frame.flags);
+//        System.out.println("frame.data: " + frame.data);
+//        for (int i = 0; i < frame.data.length; i++) {
+//          System.out.println("  frame.data[" + i + "]: " + frame.data[i]);
+//        }
         org.freedesktop.gstreamer.Video.unmapVideoFrame(frame);
       }
-      
+      GSTVIDEO_API.gst_video_info_free(info);
       
       
       /*
