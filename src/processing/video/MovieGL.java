@@ -838,7 +838,7 @@ public class MovieGL extends PImage implements PConstants {
     
     PGraphicsOpenGL pg = (PGraphicsOpenGL)parent.g;
     PJOGL pgl = (PJOGL)pg.pgl;
-    System.out.println(pgl.context.getHandle());
+    //System.out.println(pgl.context.getHandle());
     
     
     rgbSink = (AppSink)pipe.getElementByName("sink");
